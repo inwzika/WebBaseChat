@@ -7,6 +7,7 @@ import {
   setConnection,
   setIsCallInProgress,
   setIsReceivingCall,
+  setRemoteStream,
 } from '../../../../store/call/callSlice';
 import { WebsocketEvents } from '../../../constants';
 import { AuthContext } from '../../../context/AuthContext';
@@ -36,6 +37,12 @@ export function useVoiceCallAccepted() {
             console.log('AUDIO: calling peer now');
             const newCall = peer.call(data.acceptor.peer.id, localStream);
             dispatch(setCall(newCall));
+            
+            // Set up stream listener for the caller
+            newCall.on('stream', (remoteStream) => {
+              console.log('Caller received remote audio stream:', remoteStream.id);
+              dispatch(setRemoteStream(remoteStream));
+            });
           }
         }
       }

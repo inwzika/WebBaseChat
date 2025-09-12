@@ -7,6 +7,7 @@ import {
   setConnection,
   setCall,
   setActiveConversationId,
+  setRemoteStream,
 } from '../../../store/call/callSlice';
 import { AuthContext } from '../../context/AuthContext';
 import { SocketContext } from '../../context/SocketContext';
@@ -40,6 +41,12 @@ export function useVideoCallAccept() {
           console.log('My local stream:', localStream.id);
           const newCall = peer.call(data.acceptor.peer.id, localStream);
           dispatch(setCall(newCall));
+          
+          // Set up stream listener for the caller
+          newCall.on('stream', (remoteStream) => {
+            console.log('Caller received remote stream:', remoteStream.id);
+            dispatch(setRemoteStream(remoteStream));
+          });
         }
       }
     });

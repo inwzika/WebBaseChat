@@ -51,17 +51,30 @@ export const AppPage = () => {
 
   useEffect(() => {
     if (!user) return;
+    const useProxy = (import.meta as any).env?.VITE_USE_PROXY === 'true' || !(import.meta as any).env?.VITE_PEER_HOST;
+    
     const newPeer = new Peer(user.peer.id, {
+      // When using proxy, don't specify host/port/path - PeerJS will use same-origin
+      ...(useProxy ? {} : {
+        host: (import.meta as any).env?.VITE_PEER_HOST || 'localhost',
+        port: parseInt((import.meta as any).env?.VITE_PEER_PORT || '3001'),
+        path: (import.meta as any).env?.VITE_PEER_PATH || '/peerjs',
+      }),
+      secure: false,
       config: {
         iceServers: [
-          {
-            url: 'stun:stun.l.google.com:19302',
-          },
-          {
-            url: 'stun:stun1.l.google.com:19302',
-          },
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
         ],
       },
+    });
+
+    newPeer.on('open', (id) => {
+      console.log('PeerJS connection opened with ID:', id);
+    });
+
+    newPeer.on('error', (error) => {
+      console.error('PeerJS error:', error);
     });
     dispatch(setPeer(newPeer));
   }, []);
@@ -133,15 +146,16 @@ export const AppPage = () => {
 
   useEffect(() => {
     if (!call) return;
-    call.on('stream', (remoteStream) =>
-      dispatch(setRemoteStream(remoteStream))
-    );
+    call.on('stream', (remoteStream) => {
+      console.log('Received remote stream:', remoteStream.id);
+      dispatch(setRemoteStream(remoteStream));
+    });
     call.on('close', () => console.log('call was closed'));
     return () => {
       call.off('stream');
       call.off('close');
     };
-  }, [call]);
+  }, [call, dispatch]);
 
   useVideoCallAccept();
   useVideoCallRejected();

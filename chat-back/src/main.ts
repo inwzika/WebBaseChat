@@ -9,6 +9,7 @@ import * as passport from 'passport';
 import { getRepository } from 'typeorm';
 import { WebsocketAdapter } from './gateway/gateway.adapter';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ExpressPeerServer } from 'peer';
 
 async function bootstrap() {
   const { PORT, COOKIE_SECRET } = process.env;
@@ -29,9 +30,10 @@ async function bootstrap() {
       name: 'CHAT_APP_SESSION_ID',
       cookie: {
         maxAge: 86400000, // cookie expires 1 day later
-        // Use Lax in dev (with Vite proxy -> same-origin). Use None when forced or in prod HTTPS.
-        sameSite: ((process.env.FORCE_CROSS_SITE === 'true' || process.env.ENVIRONMENT === 'PRODUCTION') ? 'none' : 'lax') as any,
-        secure: ((process.env.ENVIRONMENT === 'PRODUCTION') || process.env.COOKIE_SECURE === 'true') as any,
+        // Development uses Vite proxy (same-origin) → Lax is correct
+        // Production (HTTPS) → None + Secure
+        sameSite: (process.env.ENVIRONMENT === 'PRODUCTION' ? 'none' : 'lax') as any,
+        secure: (process.env.ENVIRONMENT === 'PRODUCTION') as any,
       },
       store: new TypeormStore().connect(sessionRepository),
     }),
@@ -41,6 +43,14 @@ async function bootstrap() {
   app.use(passport.session());
 
   try {
+    // Mount PeerJS signaling server at /peerjs for WebRTC (PeerJS) connections
+    const httpServer = app.getHttpServer();
+    const peerServer = ExpressPeerServer(httpServer, {
+      path: '/',
+      proxied: true,
+    });
+    app.use('/peerjs', peerServer);
+
     await app.listen(PORT, () => {
       console.log(`Running on Port ${PORT}`);
       console.log(

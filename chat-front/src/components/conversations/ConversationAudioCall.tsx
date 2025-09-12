@@ -68,11 +68,11 @@ export const ConversationAudioCall = () => {
     <ConversationCallContainer>
       <div className="invisible"></div>
       <MediaContainer>
-        {localStream && (
+        {/* {localStream && (
           <AudioContainerItem>
             <audio ref={localAudioRef} autoPlay controls />
           </AudioContainerItem>
-        )}
+        )} */}
         {remoteStream && (
           <AudioContainerItem>
             <audio ref={remoteAudioRef} autoPlay controls />

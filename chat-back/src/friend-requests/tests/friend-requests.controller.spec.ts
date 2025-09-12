@@ -44,11 +44,11 @@ describe('FriendRequestsController', () => {
 
   it('should call createFriendRequest with correct params', async () => {
     await controller.createFriendRequest(mockUser, {
-      email: 'anson@gmail.com',
+      username: 'anson',
     });
     expect(friendRequestService.create).toHaveBeenCalledWith({
       user: mockUser,
-      email: 'anson@gmail.com',
+      username: 'anson',
     });
   });
 });

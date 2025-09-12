@@ -16,6 +16,11 @@ export default defineConfig({
 				ws: true,
 				changeOrigin: true,
 			},
+			"/peerjs": {
+				target: process.env.VITE_BACKEND_ORIGIN || "http://localhost:3001",
+				ws: true,
+				changeOrigin: true,
+			},
 		},
 	},
 });
